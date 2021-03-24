@@ -6,6 +6,8 @@
 # @Project  : HanGuang
 # @Python   : 3.7.5
 import base64
+import os
+import re
 
 from modle.autor import AUTOR
 import sys
@@ -85,10 +87,29 @@ def get_file_content(file_path):
 
 if __name__ == '__main__':
     file_path = sys.argv[1]
-    raw = get_file_content(file_path)
-    raw_bs64 = base64.b64encode(raw)
-    code = raw_bs64.decode()
-    print(code)
+    file_type = os.path.splitext(file_path)[1]
+    if file_type == '.raw' or file_type == '.bin':
+        raw = get_file_content(file_path)
+        raw_bs64 = base64.b64encode(raw)
+        code = raw_bs64.decode()
+        print(code)
+        b = base64.b64decode(code)
+        print(b)
+    else:
+        with open(file_path, 'r') as txt:
+            file_content = txt.read()
+        if not file_content:
+            exit(-1)
+        all_code = re.findall(r'\\{1}x(\w{2})', file_content)
+        shellcode = b''
+        for i in all_code:
+            shellcode = shellcode + bytes.fromhex(i)
+        bs64_code = base64.b64encode(shellcode)
+        code = bs64_code.decode()
+        print(code)
+        b = base64.b64decode(code)
+        print(b)
+
     make_shellcode = make_shellcode.replace('flag_to_replace', code)
     make_shellcode = make_variable_random(make_shellcode)
     make_shellcode = make_command_random(make_shellcode)
